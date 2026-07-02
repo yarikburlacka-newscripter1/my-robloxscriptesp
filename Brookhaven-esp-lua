@@ -1,0 +1,219 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local espEnabled = true
+local targetPlayerName = ""
+
+-- Создание интерфейса
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BrookhavenESP_Final"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Кнопка для восстановления меню (появляется при сворачивании)
+local RestoreButton = Instance.new("TextButton")
+RestoreButton.Size = UDim2.new(0, 50, 0, 45)
+RestoreButton.Position = UDim2.new(0, 10, 0.4, 0)
+RestoreButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+RestoreButton.BorderSizePixel = 2
+RestoreButton.BorderColor3 = Color3.fromRGB(255, 0, 0)
+RestoreButton.Text = "MENU"
+RestoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RestoreButton.TextSize = 12
+RestoreButton.Font = Enum.Font.SourceSansBold
+RestoreButton.Visible = false
+RestoreButton.Parent = ScreenGui
+
+local UICornerRestore = Instance.new("UICorner")
+UICornerRestore.CornerRadius = UDim.new(0, 8)
+UICornerRestore.Parent = RestoreButton
+
+-- Главное перетаскиваемое окно меню
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 240, 0, 140)
+MainFrame.Position = UDim2.new(0, 10, 0.4, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+MainFrame.Active = true
+MainFrame.Draggable = true -- Встроенное перетаскивание Roblox
+MainFrame.Parent = ScreenGui
+
+-- Кнопка Свернуть (_) в правом верхнем углу меню
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
+MinimizeButton.Position = UDim2.new(1, -30, 0, 5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MinimizeButton.Text = "_"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 14
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.Parent = MainFrame
+
+-- Заголовок меню
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.7, 0, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.Text = "Brookhaven ESP Меню"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.SourceSansBold
+Title.Parent = MainFrame
+
+-- Кнопка ВКЛ/ВЫКЛ общего ESP внутри меню
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0.9, 0, 0, 35)
+ToggleButton.Position = UDim2.new(0.05, 0, 0, 40)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+ToggleButton.Text = "ОБЩИЙ ESP: ВКЛ"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Parent = MainFrame
+
+local UICornerToggle = Instance.new("UICorner")
+UICornerToggle.CornerRadius = UDim.new(0, 6)
+UICornerToggle.Parent = ToggleButton
+
+-- Поле ввода ника
+local TextBox = Instance.new("TextBox")
+TextBox.Size = UDim2.new(0.68, 0, 0, 35)
+TextBox.Position = UDim2.new(0.05, 0, 0, 85)
+TextBox.PlaceholderText = "Ник игрока..."
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TextBox.TextSize = 14
+TextBox.Font = Enum.Font.SourceSans
+TextBox.Parent = MainFrame
+
+-- Кнопка-крестик (❌)
+local ClearButton = Instance.new("TextButton")
+ClearButton.Size = UDim2.new(0, 40, 0, 35)
+ClearButton.Position = UDim2.new(0.76, 0, 0, 85)
+ClearButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+ClearButton.Text = "❌"
+ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ClearButton.TextSize = 14
+ClearButton.Font = Enum.Font.SourceSansBold
+ClearButton.Parent = MainFrame
+
+local UICornerClear = Instance.new("UICorner")
+UICornerClear.CornerRadius = UDim.new(0, 6)
+UICornerClear.Parent = ClearButton
+
+-- Постоянное исправление чтения текста для Delta
+task.spawn(function()
+	while task.wait(0.2) do
+		if TextBox and TextBox.Text then
+			targetPlayerName = string.lower(TextBox.Text)
+		end
+	end
+end)
+
+-- Логика кнопок интерфейса
+MinimizeButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	RestoreButton.Visible = true
+	RestoreButton.Position = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset, MainFrame.Position.Y.Scale, MainFrame.Position.Y.Offset)
+end)
+
+RestoreButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	RestoreButton.Visible = false
+end)
+
+ClearButton.MouseButton1Click:Connect(function()
+	TextBox.Text = ""
+	targetPlayerName = ""
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	if espEnabled then
+		ToggleButton.Text = "ОБЩИЙ ESP: ВКЛ"
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+	else
+		ToggleButton.Text = "ОБЩИЙ ESP: ВЫКЛ"
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+	end
+end)
+
+-- Функция создания ESP и Chams
+local function createESP(player)
+	if player == LocalPlayer then return end
+
+	local function setupCharacter(char)
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "ESPHighlight"
+		highlight.FillColor = Color3.fromRGB(255, 0, 0)
+		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+		highlight.Adornee = char
+		highlight.Parent = char
+
+		local head = char:WaitForChild("Head", 5)
+		if not head then return end
+
+		local bill = Instance.new("BillboardGui")
+		bill.Name = "PlayerESP"
+		bill.Size = UDim2.new(0, 100, 0, 30)
+		bill.StudsOffset = Vector3.new(0, 2.5, 0)
+		bill.AlwaysOnTop = true
+		bill.Parent = head
+
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Size = UDim2.new(1, 0, 1, 0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.TextSize = 10
+		textLabel.TextStrokeTransparency = 0.3
+		textLabel.Font = Enum.Font.SourceSansBold
+		textLabel.Parent = bill
+
+		local connection
+		connection = RunService.RenderStepped:Connect(function()
+			if player.Parent and char and char:FindFirstChild("Head") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") then
+				local dist = math.floor((LocalPlayer.Character.Head.Position - char.Head.Position).Magnitude)
+				
+				local pName = string.lower(player.Name)
+				local dName = string.lower(player.DisplayName)
+				local isTarget = (targetPlayerName ~= "" and (string.find(pName, targetPlayerName) or string.find(dName, targetPlayerName)))
+
+				textLabel.Text = player.DisplayName .. " [" .. dist .. "]"
+
+				if espEnabled then
+					highlight.Enabled = true
+					bill.Enabled = true
+					if isTarget then
+						textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+						highlight.FillTransparency = 0.1
+					else
+						textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+						highlight.FillTransparency = 0.5
+					end
+				else
+					if isTarget then
+						highlight.Enabled = true
+						bill.Enabled = true
+						textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+						highlight.FillTransparency = 0.1
+					else
+						highlight.Enabled = false
+						bill.Enabled = false
+					end
+				end
+			else
+				connection:Disconnect()
+			end
+		end)
+	end
+
+	if player.Character then setupCharacter(player.Character) end
+	player.CharacterAdded:Connect(setupCharacter)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+Players.PlayerAdded:Connect(createESP)
